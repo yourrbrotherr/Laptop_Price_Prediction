@@ -2,13 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
-import os # Import os for better file path handling (though pickle is fine here)
 
-# -----------------------------
-# Configuration and Load Artifacts
-# Ensure these files (laptop_price_model.pkl, encoders.pkl, feature_columns.pkl)
-# are in the same directory as this Streamlit script.
-# -----------------------------
+
+
+# Load model artifacts
 try:
     with open("laptop_price_model.pkl", "rb") as f:
         model = pickle.load(f)
@@ -24,7 +21,7 @@ except FileNotFoundError:
 except Exception as e:
     st.error(f"Error loading model artifacts: {e}")
     st.stop()
-# -----------------------------
+
 
 st.set_page_config(page_title="Laptop Price Predictor", layout="centered")
 st.title("💻 Laptop Price Prediction")
@@ -33,20 +30,18 @@ st.markdown("""
 This app predicts the price of a laptop based on its specifications.
 """)
 
-# -----------------------------
-# Define a helper function for cleaner selectbox access
+
 def get_options(feature_key):
     """Returns the list of original labels (classes) for a given LabelEncoder."""
-    # .classes_ returns the array of fitted labels: ['Mac', 'Windows', 'Linux']
+    
     return encoders[feature_key].classes_
 
-# -----------------------------
-# Inputs from user (show actual names)
+
 
 with st.container(border=True):
     st.subheader("General Specifications")
     
-    # Categorical Inputs: Directly use the .classes_ for display
+   
     Company = st.selectbox("Company", options=get_options('Company'))
     TypeName = st.selectbox("Type Name", options=get_options('TypeName'))
     OS = st.selectbox("Operating System", options=get_options('OS'))
@@ -107,8 +102,7 @@ with st.container(border=True):
         SecondaryStorage = st.number_input("Secondary Storage Size (GB)", min_value=0, max_value=4096, value=0, step=1, help="Size of the secondary drive (e.g., HDD). Enter 0 if none.")
 
 
-# -----------------------------
-# Prediction Logic
+
 if st.button("Predict Price 💰", type="primary", use_container_width=True):
     
     # 1. Convert human-readable labels back to integers using .transform()
@@ -142,7 +136,7 @@ if st.button("Predict Price 💰", type="primary", use_container_width=True):
         # 2. Create DataFrame for prediction
         input_df = pd.DataFrame([input_dict])
 
-        # 3. Ensure all feature columns are present and in the correct order
+        # 3. Ensure all feature columns are present in the correct order
         input_df = input_df.reindex(columns=feature_columns, fill_value=0)
 
         # 4. Predict
@@ -157,7 +151,6 @@ if st.button("Predict Price 💰", type="primary", use_container_width=True):
         st.success("---")
 
     except ValueError as e:
-        # This usually happens if the user manually changes the picke files and a label is missing
         st.error(f"One of the selected categorical labels is not recognized by the model encoder. Please check input files. Error: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
